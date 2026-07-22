@@ -72,6 +72,19 @@
       transform: translateY(-2px);
     }
 
+    /* Leaflet Dark Theme Adjustments */
+    .leaflet-popup-content-wrapper {
+      background: rgba(10, 12, 36, 0.95) !important;
+      color: #f8fafc !important;
+      border: 1px solid rgba(52, 211, 153, 0.3) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+    }
+    .leaflet-popup-tip {
+      background: rgba(10, 12, 36, 0.95) !important;
+      border: 1px solid rgba(52, 211, 153, 0.3) !important;
+    }
+
     /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: #050614; }
@@ -187,6 +200,22 @@
       </div>
     </div>
 
+    <!-- Quick Filtering & Selection HUD -->
+    <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 z-30 relative">
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="applyListingsFilter('all')" id="filterBtnAll" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all">Show All Properties</button>
+        <button onclick="applyListingsFilter('high-yield')" id="filterBtnHigh" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60 transition-all">High Yield (>8.5%)</button>
+        <button onclick="applyListingsFilter('risk-alerts')" id="filterBtnRisk" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60 transition-all">DSCR Alerts (<1.25)</button>
+        <button onclick="applyListingsFilter('cash-buys')" id="filterBtnCash" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60 transition-all">Cash Purchases (0% LTV)</button>
+      </div>
+
+      <!-- Currently Selected Property Display -->
+      <div class="flex items-center gap-2 text-xs">
+        <span class="text-slate-400">Focused Asset:</span>
+        <span id="focusedPropertyLabel" class="text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">Dubai Marina Heights 2BR</span>
+      </div>
+    </div>
+
     <!-- Row 3: Geospatial Property Yield Map & AI Analyst Panel -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
@@ -197,13 +226,13 @@
             <i data-lucide="map" class="w-4 h-4 text-emerald-400"></i>
             <h3 class="text-sm font-bold text-white uppercase tracking-wider">Geospatial Yield Hotspots (Global REIT Tracker)</h3>
           </div>
-          <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Leaflet Geospatial Map</span>
+          <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Interactive Map Clicks Enabled</span>
         </div>
-        <div class="h-64 relative w-full rounded-xl overflow-hidden border border-slate-800" id="propertyMap"></div>
+        <div class="h-[340px] relative w-full rounded-xl overflow-hidden border border-slate-800" id="propertyMap"></div>
       </div>
 
-      <!-- Right: Antigravity PropTech AI Analyst (5 Cols) -->
-      <div class="lg:col-span-5 glass-terminal rounded-xl p-5 border border-emerald-500/30 flex flex-col justify-between h-[340px]">
+      <!-- Right: Antigravity PropTech AI Analyst & Detailed Asset HUD (5 Cols) -->
+      <div class="lg:col-span-5 glass-terminal rounded-xl p-5 border border-emerald-500/30 flex flex-col justify-between h-[415px]">
         <div class="flex items-center justify-between pb-2 border-b border-slate-800">
           <div class="flex items-center gap-2">
             <div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
@@ -215,12 +244,22 @@
           <span class="text-[10px] text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">PropTech active</span>
         </div>
 
+        <!-- Property HUD Info (Updates dynamically on Map Clicks) -->
+        <div class="grid grid-cols-2 gap-2 bg-slate-900/80 border border-slate-800 rounded-lg p-2.5 my-2 text-[11px] font-mono">
+          <div>Price: <span id="hudPrice" class="text-white font-bold">$450,000</span></div>
+          <div>Cap Rate: <span id="hudCap" class="text-emerald-400 font-bold">7.33%</span></div>
+          <div>CoC Return: <span id="hudCoc" class="text-emerald-400 font-bold">9.05%</span></div>
+          <div>DSCR Coverage: <span id="hudDscr" class="text-emerald-400 font-bold">1.76</span></div>
+          <div class="col-span-2 border-t border-slate-800 pt-1.5 mt-1">
+            Annual Cash Flow: <span id="hudCashFlow" class="text-emerald-400 font-bold">$12,400</span>
+          </div>
+        </div>
+
         <!-- Chat Screen -->
-        <div id="agentChatScreen" class="flex-1 overflow-y-auto my-3 space-y-3 pr-1 text-xs font-sans">
+        <div id="agentChatScreen" class="flex-1 overflow-y-auto my-1.5 space-y-3 pr-1 text-xs font-sans max-h-36">
           <div class="bg-emerald-950/20 border border-emerald-900/40 p-2.5 rounded-lg text-slate-300">
             👋 **Hello! I am your Antigravity PropTech analyst.**  
-            I analyze cash flow yields, debt coverage limits, and Monte Carlo valuations.  
-            *Try typing: "explain yields", "calculate risk", or "market shock".*
+            *Click any property circle on the map to zoom, calculate cash flows, and load its Monte Carlo appreciation paths.*
           </div>
         </div>
 
@@ -244,6 +283,7 @@
             <i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-400"></i>
             <h3 class="text-sm font-bold text-white uppercase tracking-wider">Cap Rate vs Cash-on-Cash Yield Matrix</h3>
           </div>
+          <span class="text-[10px] text-slate-400">Active Selection Highlighted</span>
         </div>
         <div class="h-60 relative w-full">
           <canvas id="yieldChart"></canvas>
@@ -255,8 +295,9 @@
         <div class="flex items-center justify-between pb-2 border-b border-slate-800">
           <div class="flex items-center gap-2">
             <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
-            <h3 class="text-sm font-bold text-white uppercase tracking-wider">5-Year Skyscraper Valuation Path</h3>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Focused Asset 5-Year Appreciation Path</h3>
           </div>
+          <span class="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Monte Carlo GBM</span>
         </div>
         <div class="h-60 relative w-full">
           <canvas id="appreciationChart"></canvas>
@@ -351,6 +392,8 @@
         this.gridZ = gridZ; // -3 to 3
         this.height = height; // Building height
         this.color = Math.random() > 0.6 ? 'rgba(52, 211, 153, 0.45)' : 'rgba(28, 34, 84, 0.35)';
+        this.isFlashing = false;
+        this.flashIntensity = 0;
       }
 
       draw(angle) {
@@ -377,9 +420,17 @@
         const w = 45 * scale;
         const h = this.height * scale;
 
-        // Draw skyscraper wireframe columns
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 1.2;
+        // Visual flash highlight if this building is selected
+        if (this.isFlashing) {
+          this.flashIntensity += 0.05;
+          const greenVal = Math.floor(180 + Math.sin(this.flashIntensity) * 75);
+          ctx.strokeStyle = `rgba(16, ${greenVal}, 129, 0.9)`;
+          ctx.lineWidth = 2.0;
+        } else {
+          ctx.strokeStyle = this.color;
+          ctx.lineWidth = 1.2;
+        }
+
         ctx.strokeRect(x2d - w / 2, y2d - h, w, h);
 
         // Draw windows wireframe rows
@@ -392,12 +443,12 @@
         }
 
         // Draw glowing yield node on top
-        if (this.height > 180) {
-          ctx.fillStyle = 'rgba(16, 185, 129, 0.85)';
-          ctx.shadowBlur = 10;
+        if (this.height > 180 || this.isFlashing) {
+          ctx.fillStyle = this.isFlashing ? '#10b981' : 'rgba(16, 185, 129, 0.85)';
+          ctx.shadowBlur = this.isFlashing ? 15 : 10;
           ctx.shadowColor = '#10b981';
           ctx.beginPath();
-          ctx.arc(x2d, y2d - h, 3.5, 0, Math.PI * 2);
+          ctx.arc(x2d, y2d - h, this.isFlashing ? 5.5 : 3.5, 0, Math.PI * 2);
           ctx.fill();
           ctx.shadowBlur = 0;
         }
@@ -444,6 +495,8 @@
     ];
 
     let processedListings = [];
+    let activeFilter = 'all';
+    let focusedPropertyId = 'PROP-DXB-001';
     let yieldChartInstance = null;
     let appreciationChartInstance = null;
     let selectedFileObject = null;
@@ -503,10 +556,20 @@
     function renderApp() {
       processedListings = processPropertyCalculations(rawProperties);
 
+      // Apply Filters
+      let filtered = [...processedListings];
+      if (activeFilter === 'high-yield') {
+        filtered = processedListings.filter(p => p.coc_yield_percent >= 8.5);
+      } else if (activeFilter === 'risk-alerts') {
+        filtered = processedListings.filter(p => p.dscr < 1.25);
+      } else if (activeFilter === 'cash-buys') {
+        filtered = processedListings.filter(p => p.ltv_ratio === 0.0 || document.getElementById('sliderLtv').value == 0);
+      }
+
       let totalValue = 0, totalInvested = 0, totalNoi = 0;
       let capSum = 0, cocSum = 0;
 
-      processedListings.forEach(p => {
+      filtered.forEach(p => {
         totalValue += p.purchase_price;
         totalInvested += p.cash_equity;
         totalNoi += p.annual_noi;
@@ -514,19 +577,20 @@
         cocSum += p.coc_yield_percent;
       });
 
-      const avgCap = capSum / processedListings.length;
-      const avgCoc = cocSum / processedListings.length;
+      const avgCap = filtered.length > 0 ? (capSum / filtered.length) : 0;
+      const avgCoc = filtered.length > 0 ? (cocSum / filtered.length) : 0;
 
       document.getElementById('kpiAvgCapRate').innerText = `${avgCap.toFixed(2)}%`;
       document.getElementById('kpiAvgCoCYield').innerText = `${avgCoc.toFixed(2)}%`;
       document.getElementById('kpiTotalValue').innerText = `$${totalValue.toLocaleString()}`;
       document.getElementById('kpiTotalInvested').innerText = `$${totalInvested.toLocaleString()}`;
 
-      renderYieldChart();
+      renderYieldChart(filtered);
       renderAppreciationChart();
       initMap();
-      updateMapMarkers();
-      renderTable();
+      updateMapMarkers(filtered);
+      renderTable(filtered);
+      updateFocusedPropertyHUD();
       lucide.createIcons();
     }
 
@@ -544,12 +608,12 @@
       }).addTo(propertyMapInstance);
     }
 
-    function updateMapMarkers() {
+    function updateMapMarkers(filteredListings) {
       if (!propertyMapInstance) return;
       propertyMapMarkers.forEach(m => propertyMapInstance.removeLayer(m));
       propertyMapMarkers = [];
 
-      processedListings.forEach(p => {
+      filteredListings.forEach(p => {
         const lat = p.lat || (25.0777 + (Math.random() - 0.5) * 0.1);
         const lon = p.lon || (55.1328 + (Math.random() - 0.5) * 0.1);
 
@@ -557,22 +621,29 @@
         if (p.coc_yield_percent >= 8.5) color = '#10b981';
         else if (p.coc_yield_percent >= 5.0) color = '#fbbf24';
 
+        const isSelected = p.property_id === focusedPropertyId;
+
         const marker = L.circleMarker([lat, lon], {
-          radius: 8,
+          radius: isSelected ? 12 : 8,
           fillColor: color,
-          color: '#ffffff',
-          weight: 1.5,
+          color: isSelected ? '#ffffff' : '#10b981',
+          weight: isSelected ? 3 : 1,
           opacity: 1,
           fillOpacity: 0.85
         }).addTo(propertyMapInstance);
+
+        // Click Marker to Select Property
+        marker.on('click', () => {
+          selectFocusedProperty(p.property_id);
+          propertyMapInstance.setView([lat, lon], 5);
+        });
 
         const popupContent = `
           <div class="p-1 text-xs text-slate-300">
             <h4 class="font-bold text-emerald-400 border-b border-slate-800 pb-1 mb-1">${p.property_name}</h4>
             <div>Price: <b>$${p.purchase_price.toLocaleString()}</b></div>
-            <div>Cap Rate: <b class="text-emerald-400">${p.cap_rate_percent.toFixed(2)}%</b></div>
-            <div>CoC Yield: <b class="text-emerald-400">${p.coc_yield_percent.toFixed(2)}%</b></div>
-            <div>DSCR: <b class="${p.dscr >= 1.25 ? 'text-emerald-400' : 'text-rose-400'}">${p.dscr.toFixed(2)}</b></div>
+            <div>CoC Return: <b class="text-emerald-400">${p.coc_yield_percent.toFixed(2)}%</b></div>
+            <div class="text-[10px] text-slate-500 mt-1">Click circle to focus asset & load chart</div>
           </div>
         `;
 
@@ -581,15 +652,86 @@
       });
     }
 
-    function renderYieldChart() {
+    function selectFocusedProperty(id) {
+      focusedPropertyId = id;
+      
+      // Update HUD and lines
+      updateFocusedPropertyHUD();
+      renderAppreciationChart();
+      
+      // Flash a random building in the background 3D grid
+      structures.forEach(s => s.isFlashing = false);
+      const randIdx = Math.floor(Math.random() * structures.length);
+      if (structures[randIdx]) {
+        structures[randIdx].isFlashing = true;
+        structures[randIdx].flashIntensity = 0;
+      }
+
+      // Sync Table highlight
+      const rows = document.querySelectorAll('#propertyTableBody tr');
+      rows.forEach(r => {
+        r.classList.remove('bg-emerald-500/10');
+        if (r.getAttribute('data-id') === id) {
+          r.classList.add('bg-emerald-500/10');
+        }
+      });
+    }
+
+    function updateFocusedPropertyHUD() {
+      const p = processedListings.find(x => x.property_id === focusedPropertyId) || processedListings[0];
+      if (!p) return;
+
+      document.getElementById('focusedPropertyLabel').innerText = p.property_name;
+      document.getElementById('hudPrice').innerText = `$${p.purchase_price.toLocaleString()}`;
+      document.getElementById('hudCap').innerText = `${p.cap_rate_percent.toFixed(2)}%`;
+      document.getElementById('hudCoc').innerText = `${p.coc_yield_percent.toFixed(2)}%`;
+      document.getElementById('hudDscr').innerText = p.dscr.toFixed(2);
+      
+      const netCashFlow = (p.annual_noi - p.annual_debt_service);
+      document.getElementById('hudCashFlow').innerText = `$${netCashFlow.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+      const screen = document.getElementById('agentChatScreen');
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-300 text-[11px] font-sans';
+      infoDiv.innerHTML = `🤖 **System Focus Update**: Switched model view to **${p.property_name}**. Leverage profile reads LTV at ${Math.round(p.ltv_ratio * 100)}% with DSCR coverage at ${p.dscr}.`;
+      screen.appendChild(infoDiv);
+      screen.scrollTop = screen.scrollHeight;
+    }
+
+    function applyListingsFilter(type) {
+      activeFilter = type;
+      
+      const filterIds = ['filterBtnAll', 'filterBtnHigh', 'filterBtnRisk', 'filterBtnCash'];
+      filterIds.forEach(id => {
+        const btn = document.getElementById(id);
+        btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60 transition-all";
+      });
+
+      let activeId = 'filterBtnAll';
+      if (type === 'high-yield') activeId = 'filterBtnHigh';
+      else if (type === 'risk-alerts') activeId = 'filterBtnRisk';
+      else if (type === 'cash-buys') activeId = 'filterBtnCash';
+
+      document.getElementById(activeId).className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all";
+
+      renderApp();
+    }
+
+    function renderYieldChart(filteredListings) {
       const ctx = document.getElementById('yieldChart').getContext('2d');
       if (yieldChartInstance) yieldChartInstance.destroy();
 
-      const scatterData = processedListings.map(p => ({
+      const scatterData = filteredListings.map(p => ({
         x: p.cap_rate_percent,
         y: p.coc_yield_percent,
-        label: p.property_name
+        label: p.property_name,
+        id: p.property_id
       }));
+
+      // Highlight colors: focused asset is larger and highlighted
+      const pointColors = scatterData.map(d => d.id === focusedPropertyId ? '#ffffff' : '#10b981');
+      const pointBorderColors = scatterData.map(d => d.id === focusedPropertyId ? '#34d399' : '#059669');
+      const pointSizes = scatterData.map(d => d.id === focusedPropertyId ? 12 : 7);
 
       yieldChartInstance = new Chart(ctx, {
         type: 'scatter',
@@ -597,16 +739,24 @@
           datasets: [{
             label: 'Properties Evaluated',
             data: scatterData,
-            backgroundColor: '#10b981',
-            borderColor: '#34d399',
+            backgroundColor: pointColors,
+            borderColor: pointBorderColors,
             borderWidth: 2,
-            pointRadius: 8,
-            pointHoverRadius: 10
+            pointRadius: pointSizes,
+            pointHoverRadius: 12
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          onClick: (e, items) => {
+            if (items.length > 0) {
+              const datasetIndex = items[0].datasetIndex;
+              const index = items[0].index;
+              const prop = yieldChartInstance.data.datasets[datasetIndex].data[index];
+              selectFocusedProperty(prop.id);
+            }
+          },
           scales: {
             x: { title: { display: true, text: 'Cap Rate (%)', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#1c2254' } },
             y: { title: { display: true, text: 'Cash-on-Cash Yield (%)', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#1c2254' } }
@@ -629,22 +779,50 @@
       const ctx = document.getElementById('appreciationChart').getContext('2d');
       if (appreciationChartInstance) appreciationChartInstance.destroy();
 
+      const p = processedListings.find(x => x.property_id === focusedPropertyId) || processedListings[0];
+      if (!p) return;
+
       const years = ['Purchase', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'];
-      const datasets = processedListings.slice(0, 3).map((p, idx) => {
-        const colors = ['#10b981', '#fbbf24', '#a855f7'];
-        return {
-          label: p.property_name,
-          data: p.mean_appreciation_path,
-          borderColor: colors[idx % colors.length],
-          backgroundColor: 'transparent',
-          borderWidth: 2.5,
-          tension: 0.3
-        };
-      });
+      
+      // Calculate upside (Appreciation + 1.5%) and downside (Appreciation - 2%)
+      const baseApp = p.mean_appreciation_path;
+      const upsideApp = baseApp.map((val, idx) => Math.round(val * Math.pow(1.02, idx)));
+      const downsideApp = baseApp.map((val, idx) => Math.round(val * Math.pow(0.97, idx)));
 
       appreciationChartInstance = new Chart(ctx, {
         type: 'line',
-        data: { labels: years, datasets: datasets },
+        data: {
+          labels: years,
+          datasets: [
+            {
+              label: `${p.property_name} (Median Forecast)`,
+              data: baseApp,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.05)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'Optimistic Path',
+              data: upsideApp,
+              borderColor: '#fbbf24',
+              backgroundColor: 'transparent',
+              borderWidth: 1.5,
+              borderDash: [5, 5],
+              tension: 0.3
+            },
+            {
+              label: 'Stressed Path',
+              data: downsideApp,
+              borderColor: '#f43f5e',
+              backgroundColor: 'transparent',
+              borderWidth: 1.5,
+              borderDash: [5, 5],
+              tension: 0.3
+            }
+          ]
+        },
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -657,13 +835,16 @@
       });
     }
 
-    function renderTable() {
+    function renderTable(filteredListings) {
       const tbody = document.getElementById('propertyTableBody');
       tbody.innerHTML = '';
 
-      processedListings.forEach(p => {
+      filteredListings.forEach(p => {
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-900/60 transition-colors";
+        tr.className = `cursor-pointer transition-colors ${p.property_id === focusedPropertyId ? 'bg-emerald-500/10' : 'hover:bg-slate-900/60'}`;
+        tr.setAttribute('data-id', p.property_id);
+
+        tr.onclick = () => selectFocusedProperty(p.property_id);
 
         tr.innerHTML = `
           <td class="p-3 font-bold text-emerald-400">${p.property_id}</td>
@@ -720,12 +901,13 @@
 
     function getAgentReply(query) {
       const q = query.toLowerCase();
+      const p = processedListings.find(x => x.property_id === focusedPropertyId) || processedListings[0];
 
       if (q.includes('yield') || q.includes('cap') || q.includes('formula')) {
-        return "I evaluate yields using: **$\\text{Cap Rate} = \\frac{\\text{NOI}}{\\text{Price}}$** and **$\\text{Cash-on-Cash} = \\frac{\\text{Cash Flow after Debt}}{\\text{Equity}}$**. Adjust LTV to optimize cash leverage.";
+        return `I evaluate yields using: **$\\text{Cap Rate} = \\frac{\\text{NOI}}{\\text{Price}}$** and **$\\text{Cash-on-Cash} = \\frac{\\text{Cash Flow after Debt}}{\\text{Equity}}$**. For **${p.property_name}**, the current Cap Rate is **${p.cap_rate_percent.toFixed(2)}%** and Cash-on-Cash is **${p.coc_yield_percent.toFixed(2)}%**.`;
       }
       if (q.includes('risk') || q.includes('dscr') || q.includes('debt')) {
-        return "Lenders seek a **DSCR > 1.25** to secure financing. If interest rates rise above 6%, several properties may slip below this boundary. Reduce LTV to improve debt coverage.";
+        return `Lenders seek a **DSCR > 1.25** to secure financing. **${p.property_name}** currently reads a DSCR of **${p.dscr.toFixed(2)}**. If interest rates rise above 6%, several properties may slip below this boundary. Reduce LTV to improve debt coverage.`;
       }
       if (q.includes('shock') || q.includes('market') || q.includes('crash')) {
         // Trigger negative appreciation shock
@@ -734,7 +916,7 @@
         return "⚠️ GDP/Appreciation shock triggered! Annual appreciation set to **-1.50%**. Property values depreciating over the 5-year exit horizon.";
       }
 
-      return "I can explain the **yield formulas**, **calculate debt limits (DSCR)**, or simulate a **market appreciation shock**. What analysis would you like to run?";
+      return `I can explain the **yield formulas** for **${p.property_name}**, calculate its **debt limit (DSCR)**, or simulate a **market appreciation shock**. What analysis would you like to run?`;
     }
 
     function openModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
