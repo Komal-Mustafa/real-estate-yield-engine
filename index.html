@@ -39,6 +39,10 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
+  <!-- Leaflet Map CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
     body { background-color: #050614; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
     
@@ -183,21 +187,19 @@
       </div>
     </div>
 
-    <!-- Yield Analysis Charts & Antigravity PropTech AI Copilot -->
+    <!-- Row 3: Geospatial Property Yield Map & AI Analyst Panel -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-      <!-- Left: Cap Rate vs Cash-on-Cash Scatter Plot (7 Cols) -->
+      <!-- Left: Interactive Geospatial Yield Map (7 Cols) -->
       <div class="lg:col-span-7 glass-terminal rounded-xl p-5 border border-slate-800 flex flex-col space-y-4">
         <div class="flex items-center justify-between pb-2 border-b border-slate-800">
           <div class="flex items-center gap-2">
-            <i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-400"></i>
-            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Property Yield Matrix (Cap Rate vs Cash-on-Cash)</h3>
+            <i data-lucide="map" class="w-4 h-4 text-emerald-400"></i>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Geospatial Yield Hotspots (Global REIT Tracker)</h3>
           </div>
-          <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Leverage Optimization</span>
+          <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Leaflet Geospatial Map</span>
         </div>
-        <div class="h-64 relative w-full">
-          <canvas id="yieldChart"></canvas>
-        </div>
+        <div class="h-64 relative w-full rounded-xl overflow-hidden border border-slate-800" id="propertyMap"></div>
       </div>
 
       <!-- Right: Antigravity PropTech AI Analyst (5 Cols) -->
@@ -233,56 +235,66 @@
 
     </div>
 
-    <!-- Monte Carlo Skyscraper Appreciation Path & Data Grid Table -->
+    <!-- Row 4: Yield Scatter Chart & Monte Carlo Appreciation Line Chart -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Scatter Chart -->
+      <div class="lg:col-span-6 glass-terminal rounded-xl p-5 border border-slate-800 flex flex-col space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-400"></i>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Cap Rate vs Cash-on-Cash Yield Matrix</h3>
+          </div>
+        </div>
+        <div class="h-60 relative w-full">
+          <canvas id="yieldChart"></canvas>
+        </div>
+      </div>
 
-      <!-- Left: Monte Carlo Path Trajectory (5 Cols) -->
-      <div class="lg:col-span-5 glass-terminal rounded-xl p-5 border border-slate-800 flex flex-col">
-        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+      <!-- Monte Carlo Line Chart -->
+      <div class="lg:col-span-6 glass-terminal rounded-xl p-5 border border-slate-800 flex flex-col space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
           <div class="flex items-center gap-2">
             <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
             <h3 class="text-sm font-bold text-white uppercase tracking-wider">5-Year Skyscraper Valuation Path</h3>
           </div>
-          <span class="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Monte Carlo GBM</span>
         </div>
-        <div class="h-60 relative w-full flex items-center justify-center">
+        <div class="h-60 relative w-full">
           <canvas id="appreciationChart"></canvas>
         </div>
       </div>
+    </div>
 
-      <!-- Right: Listings Data Grid Table (7 Cols) -->
-      <div class="lg:col-span-7 glass-terminal rounded-xl border border-slate-800 p-5 space-y-4">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pb-3 border-b border-slate-800">
-          <div class="relative w-full sm:w-72">
-            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-            <input id="searchInput" type="text" onkeyup="filterTable()" placeholder="Search Properties..." class="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
-          </div>
-          <button onclick="exportToCsv()" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-xs font-semibold z-30">
-            <i data-lucide="download" class="w-3.5 h-3.5"></i>
-            Export Listings CSV
-          </button>
+    <!-- Row 5: Listings Data Grid Table (12 Cols) -->
+    <div class="glass-terminal rounded-xl border border-slate-800 p-5 space-y-4">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pb-3 border-b border-slate-800">
+        <div class="relative w-full sm:w-72">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input id="searchInput" type="text" onkeyup="filterTable()" placeholder="Search Properties..." class="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
         </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-900/50">
-                <th class="p-3">ID</th>
-                <th class="p-3">Property Name</th>
-                <th class="p-3 text-right">Purchase Price</th>
-                <th class="p-3 text-right">Cap Rate</th>
-                <th class="p-3 text-right">CoC Yield</th>
-                <th class="p-3 text-right">DSCR</th>
-                <th class="p-3 text-right">Median Exit Value</th>
-              </tr>
-            </thead>
-            <tbody id="propertyTableBody" class="divide-y divide-slate-800/60 font-mono">
-              <!-- Injected by JS -->
-            </tbody>
-          </table>
-        </div>
+        <button onclick="exportToCsv()" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-xs font-semibold z-30">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i>
+          Export Listings CSV
+        </button>
       </div>
 
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-900/50">
+              <th class="p-3">ID</th>
+              <th class="p-3">Property Name</th>
+              <th class="p-3 text-right">Purchase Price</th>
+              <th class="p-3 text-right">Cap Rate</th>
+              <th class="p-3 text-right">CoC Yield</th>
+              <th class="p-3 text-right">DSCR</th>
+              <th class="p-3 text-right">Median Exit Value</th>
+            </tr>
+          </thead>
+          <tbody id="propertyTableBody" class="divide-y divide-slate-800/60 font-mono">
+            <!-- Injected by JS -->
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </main>
@@ -424,17 +436,19 @@
 
     // 2. Real Estate Cash Flow Optimization Engine
     let rawProperties = [
-      { property_id: "PROP-DXB-001", property_name: "Dubai Marina Heights 2BR", purchase_price: 450000.0, gross_monthly_rent: 3400.0, monthly_expenses: 650.0, ltv_ratio: 0.70, annual_interest_rate: 0.052 },
-      { property_id: "PROP-RUH-002", property_name: "Riyadh Olaya District Studio", purchase_price: 280000.0, gross_monthly_rent: 2100.0, monthly_expenses: 420.0, ltv_ratio: 0.60, annual_interest_rate: 0.055 },
-      { property_id: "PROP-DXB-003", property_name: "Palm Jumeirah luxury Villa", purchase_price: 1850000.0, gross_monthly_rent: 12500.0, monthly_expenses: 2400.0, ltv_ratio: 0.50, annual_interest_rate: 0.048 },
-      { property_id: "PROP-NYC-004", property_name: "Manhattan Midtown Condo", purchase_price: 920000.0, gross_monthly_rent: 5800.0, monthly_expenses: 1400.0, ltv_ratio: 0.75, annual_interest_rate: 0.062 },
-      { property_id: "PROP-SYD-005", property_name: "Sydney Harbour view apartment", purchase_price: 780000.0, gross_monthly_rent: 4600.0, monthly_expenses: 950.0, ltv_ratio: 0.80, annual_interest_rate: 0.058 }
+      { property_id: "PROP-DXB-001", property_name: "Dubai Marina Heights 2BR", purchase_price: 450000.0, gross_monthly_rent: 3400.0, monthly_expenses: 650.0, ltv_ratio: 0.70, annual_interest_rate: 0.052, lat: 25.0777, lon: 55.1328 },
+      { property_id: "PROP-RUH-002", property_name: "Riyadh Olaya District Studio", purchase_price: 280000.0, gross_monthly_rent: 2100.0, monthly_expenses: 420.0, ltv_ratio: 0.60, annual_interest_rate: 0.055, lat: 24.7136, lon: 46.6753 },
+      { property_id: "PROP-DXB-003", property_name: "Palm Jumeirah luxury Villa", purchase_price: 1850000.0, gross_monthly_rent: 12500.0, monthly_expenses: 2400.0, ltv_ratio: 0.50, annual_interest_rate: 0.048, lat: 25.1124, lon: 55.1390 },
+      { property_id: "PROP-NYC-004", property_name: "Manhattan Midtown Condo", purchase_price: 920000.0, gross_monthly_rent: 5800.0, monthly_expenses: 1400.0, ltv_ratio: 0.75, annual_interest_rate: 0.062, lat: 40.7580, lon: -73.9855 },
+      { property_id: "PROP-SYD-005", property_name: "Sydney Harbour view apartment", purchase_price: 780000.0, gross_monthly_rent: 4600.0, monthly_expenses: 950.0, ltv_ratio: 0.80, annual_interest_rate: 0.058, lat: -33.8688, lon: 151.2093 }
     ];
 
     let processedListings = [];
     let yieldChartInstance = null;
     let appreciationChartInstance = null;
     let selectedFileObject = null;
+    let propertyMapInstance = null;
+    let propertyMapMarkers = [];
 
     function processPropertyCalculations(properties) {
       const globalLtv = parseFloat(document.getElementById('sliderLtv').value) / 100.0;
@@ -510,8 +524,61 @@
 
       renderYieldChart();
       renderAppreciationChart();
+      initMap();
+      updateMapMarkers();
       renderTable();
       lucide.createIcons();
+    }
+
+    function initMap() {
+      if (propertyMapInstance) return;
+      propertyMapInstance = L.map('propertyMap', {
+        center: [25.0777, 55.1328],
+        zoom: 2,
+        zoomControl: false,
+        attributionControl: false
+      });
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20
+      }).addTo(propertyMapInstance);
+    }
+
+    function updateMapMarkers() {
+      if (!propertyMapInstance) return;
+      propertyMapMarkers.forEach(m => propertyMapInstance.removeLayer(m));
+      propertyMapMarkers = [];
+
+      processedListings.forEach(p => {
+        const lat = p.lat || (25.0777 + (Math.random() - 0.5) * 0.1);
+        const lon = p.lon || (55.1328 + (Math.random() - 0.5) * 0.1);
+
+        let color = '#f43f5e';
+        if (p.coc_yield_percent >= 8.5) color = '#10b981';
+        else if (p.coc_yield_percent >= 5.0) color = '#fbbf24';
+
+        const marker = L.circleMarker([lat, lon], {
+          radius: 8,
+          fillColor: color,
+          color: '#ffffff',
+          weight: 1.5,
+          opacity: 1,
+          fillOpacity: 0.85
+        }).addTo(propertyMapInstance);
+
+        const popupContent = `
+          <div class="p-1 text-xs text-slate-300">
+            <h4 class="font-bold text-emerald-400 border-b border-slate-800 pb-1 mb-1">${p.property_name}</h4>
+            <div>Price: <b>$${p.purchase_price.toLocaleString()}</b></div>
+            <div>Cap Rate: <b class="text-emerald-400">${p.cap_rate_percent.toFixed(2)}%</b></div>
+            <div>CoC Yield: <b class="text-emerald-400">${p.coc_yield_percent.toFixed(2)}%</b></div>
+            <div>DSCR: <b class="${p.dscr >= 1.25 ? 'text-emerald-400' : 'text-rose-400'}">${p.dscr.toFixed(2)}</b></div>
+          </div>
+        `;
+
+        marker.bindPopup(popupContent, { closeButton: false });
+        propertyMapMarkers.push(marker);
+      });
     }
 
     function renderYieldChart() {
@@ -712,13 +779,17 @@
                   const price = parseFloat(getRawVal(['purchase_price', 'price', 'cost']) || 350000);
                   const rent = parseFloat(getRawVal(['gross_monthly_rent', 'rent']) || 2500);
                   const exp = parseFloat(getRawVal(['monthly_expenses', 'expenses']) || 500);
+                  const latVal = parseFloat(getRawVal(['latitude', 'lat']));
+                  const lonVal = parseFloat(getRawVal(['longitude', 'lon', 'lng']));
 
                   parsed.push({
                     property_id: String(getRawVal(['property_id', 'id']) || `PROP-${i+1}`),
                     property_name: String(getRawVal(['property_name', 'name', 'title']) || `Listing ${i+1}`),
                     purchase_price: price,
                     gross_monthly_rent: rent,
-                    monthly_expenses: exp
+                    monthly_expenses: exp,
+                    lat: isNaN(latVal) ? undefined : latVal,
+                    lon: isNaN(lonVal) ? undefined : lonVal
                   });
                 });
 

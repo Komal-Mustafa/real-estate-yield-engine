@@ -68,9 +68,14 @@ async def upload_property_csv(file: UploadFile = File(...)):
         except Exception:
             return default_val
 
+    lat_col = cols_lower.get('latitude', cols_lower.get('lat'))
+    lon_col = cols_lower.get('longitude', cols_lower.get('lon', cols_lower.get('lng')))
+
     records: List[PropertyInput] = []
     for idx, row in df.iterrows():
         try:
+            lat_val = float(row.get(lat_col)) if lat_col and not pd.isna(row.get(lat_col)) else None
+            lon_val = float(row.get(lon_col)) if lon_col and not pd.isna(row.get(lon_col)) else None
             records.append(PropertyInput(
                 property_id=str(row.get(id_col, f"PROP-{idx+1}")),
                 property_name=str(row.get(name_col, f"Property {idx+1}")),
@@ -78,7 +83,9 @@ async def upload_property_csv(file: UploadFile = File(...)):
                 gross_monthly_rent=max(_safe_float(row.get(rent_col), 2500.0), 0.0),
                 monthly_expenses=_safe_float(row.get(exp_col), 500.0),
                 ltv_ratio=_safe_float(row.get(ltv_col), 0.70),
-                annual_interest_rate=_safe_float(row.get(rate_col), 0.055)
+                annual_interest_rate=_safe_float(row.get(rate_col), 0.055),
+                lat=lat_val,
+                lon=lon_val
             ))
         except Exception:
             continue

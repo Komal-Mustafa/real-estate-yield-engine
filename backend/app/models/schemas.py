@@ -13,6 +13,8 @@ class PropertyInput(BaseModel):
     monthly_expenses: float = Field(default=800.0, ge=0.0)
     ltv_ratio: float = Field(default=0.75, ge=0.0, le=1.0)
     annual_interest_rate: float = Field(default=0.055, ge=0.0, le=0.30)
+    lat: Optional[float] = None
+    lon: Optional[float] = None
 
 class PropertyOutput(PropertyInput):
     annual_noi: float
