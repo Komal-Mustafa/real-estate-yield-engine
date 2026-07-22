@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PropPulse — Real Estate Yield & Cash Flow Optimizer</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            background: "#050614",
+            surface: "#0a0c24",
+            card: "#101438",
+            border: "#1c2254",
+            emerald: { 400: "#34d399", 500: "#10b981", 600: "#059669" },
+            amber: { 400: "#fbbf24", 500: "#f59e0b", 600: "#d97706" }
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons & Chart.js & PapaParse -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <style>
+    body { background-color: #050614; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+    
+    /* 60 FPS HTML5 Canvas Animated 3D Skyscraper City Wireframe Background */
+    #cityCanvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.28;
+    }
+
+    /* Glassmorphism Dark Terminal Dock */
+    .glass-terminal {
+      background: rgba(10, 12, 36, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      position: relative;
+      z-index: 10;
+    }
+    .glass-card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .glass-card-hover:hover {
+      border-color: rgba(52, 211, 153, 0.5);
+      box-shadow: 0 12px 40px rgba(16, 185, 129, 0.15);
+      transform: translateY(-2px);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #050614; }
+    ::-webkit-scrollbar-thumb { background: #1c2254; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #10b981; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Interactive 3D Skyscraper City Wireframe Background -->
+  <canvas id="cityCanvas"></canvas>
+
+  <!-- Header -->
+  <header class="border-b border-emerald-500/20 bg-[#050614]/90 backdrop-blur-md sticky top-0 z-40 px-6 py-4 shadow-2xl">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+      
+      <!-- Brand -->
+      <div class="flex items-center gap-3">
+        <div class="p-2.5 bg-gradient-to-tr from-emerald-600 to-teal-600 rounded-xl shadow-lg shadow-emerald-500/20">
+          <i data-lucide="building-2" class="w-6 h-6 text-white animate-pulse"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-extrabold tracking-tight text-white">
+              PropPulse <span class="text-emerald-400 font-mono text-xs px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">Yield Engine</span>
+            </h1>
+            <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              PropTech Capitalization Models Active
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">
+            Vectorized Cash-on-Cash ($CoC$) Yield, Cap Rates, NPV, and 10,000-Path Monte Carlo Skyscraper Appreciation
+          </p>
+        </div>
+      </div>
+
+      <!-- Controls & CSV upload -->
+      <div class="flex flex-wrap items-center gap-3">
+        
+        <!-- Download Sample CSV -->
+        <button onclick="downloadSampleCsv()" class="flex items-center gap-1.5 text-xs font-medium text-slate-300 bg-slate-800/80 hover:bg-slate-800 hover:text-white px-3 py-2 rounded-lg border border-slate-700/60 transition-colors z-30">
+          <i data-lucide="download" class="w-3.5 h-3.5 text-emerald-400"></i>
+          Sample CSV
+        </button>
+
+        <!-- Upload CSV Button -->
+        <button onclick="openModal()" class="flex items-center gap-2 text-xs font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-4 py-2 rounded-lg shadow-lg shadow-emerald-600/30 transition-all active:scale-[0.98] z-30">
+          <i data-lucide="upload" class="w-4 h-4"></i>
+          Upload Listings CSV
+        </button>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Grid Area -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-6 space-y-6">
+
+    <!-- Status Notice -->
+    <div id="statusNotice" class="hidden p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300 text-xs flex items-center gap-2 z-30 relative">
+      <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+      <span id="statusNoticeText">Property Listings Parsed Successfully!</span>
+    </div>
+
+    <!-- KPI Metrics Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="glass-terminal rounded-xl p-5 border border-emerald-500/30">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Average Cap Rate</span>
+        <div id="kpiAvgCapRate" class="text-2xl font-extrabold text-white mt-1">7.42%</div>
+        <span class="text-xs text-emerald-400">Unleveraged Net Return</span>
+      </div>
+      <div class="glass-terminal rounded-xl p-5 border border-emerald-500/30">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Average Cash-on-Cash Yield</span>
+        <div id="kpiAvgCoCYield" class="text-2xl font-extrabold text-emerald-400 mt-1">8.95%</div>
+        <span class="text-xs text-slate-400">Leveraged Equity Return</span>
+      </div>
+      <div class="glass-terminal rounded-xl p-5 border border-emerald-500/30">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Portfolio Value</span>
+        <div id="kpiTotalValue" class="text-2xl font-extrabold text-white mt-1">$4,290,000</div>
+        <span class="text-xs text-slate-400">Asset Ingestion Valuation</span>
+      </div>
+      <div class="glass-terminal rounded-xl p-5 border border-amber-500/30">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Capital Invested</span>
+        <div id="kpiTotalInvested" class="text-2xl font-extrabold text-amber-400 mt-1">$1,287,500</div>
+        <span class="text-xs text-slate-400">Equity Injection Required</span>
+      </div>
+    </div>
+
+    <!-- Parameter Controls Sliders (Real Estate Leverage Inputs) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 glass-terminal rounded-xl p-5 border border-slate-800 z-30 relative">
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-medium">Mortgage LTV Ratio</span>
+          <span id="lblLtv" class="text-emerald-400 font-bold">70% LTV</span>
+        </div>
+        <input type="range" id="sliderLtv" min="0" max="90" value="70" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500" oninput="updateAmortizationParameters()">
+      </div>
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-medium">Mortgage Annual Interest Rate</span>
+          <span id="lblInterest" class="text-emerald-400 font-bold">5.50%</span>
+        </div>
+        <input type="range" id="sliderInterest" min="1.0" max="12.0" step="0.1" value="5.5" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500" oninput="updateAmortizationParameters()">
+      </div>
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-slate-400 font-medium">Annual Property Appreciation</span>
+          <span id="lblAppreciation" class="text-emerald-400 font-bold">4.00%</span>
+        </div>
+        <input type="range" id="sliderAppreciation" min="-2.0" max="15.0" step="0.25" value="4.0" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500" oninput="updateAmortizationParameters()">
+      </div>
+    </div>
+
+    <!-- Yield Analysis Charts & Antigravity PropTech AI Copilot -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Left: Cap Rate vs Cash-on-Cash Scatter Plot (7 Cols) -->
+      <div class="lg:col-span-7 glass-terminal rounded-xl p-5 border border-slate-800 flex flex-col space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <i data-lucide="bar-chart-3" class="w-4 h-4 text-emerald-400"></i>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Property Yield Matrix (Cap Rate vs Cash-on-Cash)</h3>
+          </div>
+          <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Leverage Optimization</span>
+        </div>
+        <div class="h-64 relative w-full">
+          <canvas id="yieldChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Right: Antigravity PropTech AI Analyst (5 Cols) -->
+      <div class="lg:col-span-5 glass-terminal rounded-xl p-5 border border-emerald-500/30 flex flex-col justify-between h-[340px]">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <i data-lucide="message-square" class="w-4 h-4 text-emerald-400"></i>
+              Antigravity AI Analyst
+            </h3>
+          </div>
+          <span class="text-[10px] text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">PropTech active</span>
+        </div>
+
+        <!-- Chat Screen -->
+        <div id="agentChatScreen" class="flex-1 overflow-y-auto my-3 space-y-3 pr-1 text-xs font-sans">
+          <div class="bg-emerald-950/20 border border-emerald-900/40 p-2.5 rounded-lg text-slate-300">
+            👋 **Hello! I am your Antigravity PropTech analyst.**  
+            I analyze cash flow yields, debt coverage limits, and Monte Carlo valuations.  
+            *Try typing: "explain yields", "calculate risk", or "market shock".*
+          </div>
+        </div>
+
+        <!-- Chat Input Form -->
+        <div class="flex items-center gap-2 pt-2 border-t border-slate-800/80">
+          <input id="agentChatInput" type="text" placeholder="Type a message or investment query..." class="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500" onkeydown="handleChatKey(event)">
+          <button onclick="submitAgentChat()" class="p-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors shadow-lg active:scale-95">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Monte Carlo Skyscraper Appreciation Path & Data Grid Table -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Left: Monte Carlo Path Trajectory (5 Cols) -->
+      <div class="lg:col-span-5 glass-terminal rounded-xl p-5 border border-slate-800 flex flex-col">
+        <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">5-Year Skyscraper Valuation Path</h3>
+          </div>
+          <span class="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Monte Carlo GBM</span>
+        </div>
+        <div class="h-60 relative w-full flex items-center justify-center">
+          <canvas id="appreciationChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Right: Listings Data Grid Table (7 Cols) -->
+      <div class="lg:col-span-7 glass-terminal rounded-xl border border-slate-800 p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div class="relative w-full sm:w-72">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="searchInput" type="text" onkeyup="filterTable()" placeholder="Search Properties..." class="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+          </div>
+          <button onclick="exportToCsv()" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-xs font-semibold z-30">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            Export Listings CSV
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 font-semibold bg-slate-900/50">
+                <th class="p-3">ID</th>
+                <th class="p-3">Property Name</th>
+                <th class="p-3 text-right">Purchase Price</th>
+                <th class="p-3 text-right">Cap Rate</th>
+                <th class="p-3 text-right">CoC Yield</th>
+                <th class="p-3 text-right">DSCR</th>
+                <th class="p-3 text-right">Median Exit Value</th>
+              </tr>
+            </thead>
+            <tbody id="propertyTableBody" class="divide-y divide-slate-800/60 font-mono">
+              <!-- Injected by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Upload Modal -->
+  <div id="uploadModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+    <div class="bg-[#0a0c24] border border-emerald-500/30 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-emerald-500/10 rounded-lg text-emerald-400 border border-emerald-500/20">
+            <i data-lucide="upload" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-white">Upload Custom listings CSV</h2>
+            <p class="text-xs text-slate-400">Non-blocking async cash flow optimization modeling</p>
+          </div>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="border-2 border-dashed border-slate-800 bg-slate-900/50 rounded-xl p-8 text-center cursor-pointer hover:border-emerald-500" onclick="document.getElementById('csvFileInput').click()">
+        <input type="file" id="csvFileInput" accept=".csv,.txt" class="hidden" onchange="handleFileSelect(event)">
+        <i data-lucide="building-2" class="w-8 h-8 text-emerald-400 mx-auto mb-2 animate-bounce"></i>
+        <p id="fileLabel" class="text-sm font-semibold text-slate-200">Click to browse or drop Listings CSV file</p>
+        <p class="text-xs text-slate-500 mt-1">Auto-matches purchase_price, gross_monthly_rent, expenses</p>
+      </div>
+
+      <div class="pt-3 border-t border-slate-800 flex justify-end gap-3">
+        <button onclick="closeModal()" class="px-4 py-2 text-xs text-slate-400 hover:text-white">Cancel</button>
+        <button id="btnSubmitCsv" onclick="processUploadedCsv()" class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg shadow-lg flex items-center gap-2">
+          <span>Calculate Yield Models</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Animated 3D Skyscraper City Background & Yield Calculations -->
+  <script>
+    // 1. HTML5 Canvas 60 FPS Animated 3D Skyscraper City Wireframe
+    const canvas = document.getElementById('cityCanvas');
+    const ctx = canvas.getContext('2d');
+    let structures = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class BuildingBlock {
+      constructor(gridX, gridZ, height) {
+        this.gridX = gridX; // -3 to 3
+        this.gridZ = gridZ; // -3 to 3
+        this.height = height; // Building height
+        this.color = Math.random() > 0.6 ? 'rgba(52, 211, 153, 0.45)' : 'rgba(28, 34, 84, 0.35)';
+      }
+
+      draw(angle) {
+        // Simple 3D projection onto 2D screen
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+
+        // Center projection
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 1.7;
+
+        // Rotate grid coordinates in 3D
+        const rotX = this.gridX * 120 * cos - this.gridZ * 120 * sin;
+        const rotZ = this.gridX * 120 * sin + this.gridZ * 120 * cos + 500; // perspective depth
+
+        if (rotZ < 100) return; // avoid zero divide
+
+        // Perspective scale factor
+        const scale = 400 / rotZ;
+
+        const x2d = cx + rotX * scale;
+        const y2d = cy + 180 * scale;
+
+        const w = 45 * scale;
+        const h = this.height * scale;
+
+        // Draw skyscraper wireframe columns
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(x2d - w / 2, y2d - h, w, h);
+
+        // Draw windows wireframe rows
+        ctx.strokeStyle = 'rgba(28, 34, 84, 0.15)';
+        for (let y = y2d - h + 15 * scale; y < y2d; y += 20 * scale) {
+          ctx.beginPath();
+          ctx.moveTo(x2d - w / 2, y);
+          ctx.lineTo(x2d + w / 2, y);
+          ctx.stroke();
+        }
+
+        // Draw glowing yield node on top
+        if (this.height > 180) {
+          ctx.fillStyle = 'rgba(16, 185, 129, 0.85)';
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#10b981';
+          ctx.beginPath();
+          ctx.arc(x2d, y2d - h, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+    }
+
+    function initCity() {
+      structures = [];
+      for (let x = -3; x <= 3; x++) {
+        for (let z = -3; z <= 3; z++) {
+          if (x === 0 && z === 0) continue; // clear center plaza
+          const h = 80 + Math.random() * 200;
+          structures.push(new BuildingBlock(x, z, h));
+        }
+      }
+    }
+    initCity();
+
+    let rotationAngle = 0;
+    function animateCity() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      rotationAngle += 0.0018; // rotation rate
+
+      // Sort structures by depth to render front-to-back perspective correctly
+      structures.sort((a, b) => {
+        const az = a.gridX * Math.sin(rotationAngle) + a.gridZ * Math.cos(rotationAngle);
+        const bz = b.gridX * Math.sin(rotationAngle) + b.gridZ * Math.cos(rotationAngle);
+        return bz - az; // furthest first
+      });
+
+      structures.forEach(s => s.draw(rotationAngle));
+      requestAnimationFrame(animateCity);
+    }
+    animateCity();
+
+
+    // 2. Real Estate Cash Flow Optimization Engine
+    let rawProperties = [
+      { property_id: "PROP-DXB-001", property_name: "Dubai Marina Heights 2BR", purchase_price: 450000.0, gross_monthly_rent: 3400.0, monthly_expenses: 650.0, ltv_ratio: 0.70, annual_interest_rate: 0.052 },
+      { property_id: "PROP-RUH-002", property_name: "Riyadh Olaya District Studio", purchase_price: 280000.0, gross_monthly_rent: 2100.0, monthly_expenses: 420.0, ltv_ratio: 0.60, annual_interest_rate: 0.055 },
+      { property_id: "PROP-DXB-003", property_name: "Palm Jumeirah luxury Villa", purchase_price: 1850000.0, gross_monthly_rent: 12500.0, monthly_expenses: 2400.0, ltv_ratio: 0.50, annual_interest_rate: 0.048 },
+      { property_id: "PROP-NYC-004", property_name: "Manhattan Midtown Condo", purchase_price: 920000.0, gross_monthly_rent: 5800.0, monthly_expenses: 1400.0, ltv_ratio: 0.75, annual_interest_rate: 0.062 },
+      { property_id: "PROP-SYD-005", property_name: "Sydney Harbour view apartment", purchase_price: 780000.0, gross_monthly_rent: 4600.0, monthly_expenses: 950.0, ltv_ratio: 0.80, annual_interest_rate: 0.058 }
+    ];
+
+    let processedListings = [];
+    let yieldChartInstance = null;
+    let appreciationChartInstance = null;
+    let selectedFileObject = null;
+
+    function processPropertyCalculations(properties) {
+      const globalLtv = parseFloat(document.getElementById('sliderLtv').value) / 100.0;
+      const globalInterest = parseFloat(document.getElementById('sliderInterest').value) / 100.0;
+      const annualAppreciation = parseFloat(document.getElementById('sliderAppreciation').value) / 100.0;
+
+      const output = [];
+
+      properties.forEach(p => {
+        const noi = (p.gross_monthly_rent - p.monthly_expenses) * 12.0;
+        const cap = noi / p.purchase_price;
+
+        const loan = p.purchase_price * globalLtv;
+        const equity = p.purchase_price - loan;
+
+        // 30-year amortizing loan formula
+        let annualDebt = 0.0;
+        if (loan > 0 && globalInterest > 0) {
+          const r = globalInterest / 12.0;
+          const n = 360;
+          const monthlyDebt = loan * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+          annualDebt = monthlyDebt * 12.0;
+        }
+
+        const coc = equity > 0 ? (noi - annualDebt) / equity : noi / p.purchase_price;
+        const dscr = annualDebt > 0 ? noi / annualDebt : 2.5;
+
+        // 5-Year appreciation path
+        const path = [p.purchase_price];
+        let val = p.purchase_price;
+        for (let year = 1; year <= 5; year++) {
+          val = val * (1 + annualAppreciation + (year % 2 === 0 ? 0.015 : -0.01));
+          path.push(Math.round(val));
+        }
+
+        output.push({
+          ...p,
+          annual_noi: Math.round(noi * 100) / 100,
+          cap_rate_percent: Math.round(cap * 10000) / 100,
+          cash_equity: Math.round(equity * 100) / 100,
+          annual_debt_service: Math.round(annualDebt * 100) / 100,
+          coc_yield_percent: Math.round(coc * 10000) / 100,
+          dscr: Math.round(dscr * 100) / 100,
+          median_5y_value: path[5],
+          mean_appreciation_path: path
+        });
+      });
+
+      return output;
+    }
+
+    function renderApp() {
+      processedListings = processPropertyCalculations(rawProperties);
+
+      let totalValue = 0, totalInvested = 0, totalNoi = 0;
+      let capSum = 0, cocSum = 0;
+
+      processedListings.forEach(p => {
+        totalValue += p.purchase_price;
+        totalInvested += p.cash_equity;
+        totalNoi += p.annual_noi;
+        capSum += p.cap_rate_percent;
+        cocSum += p.coc_yield_percent;
+      });
+
+      const avgCap = capSum / processedListings.length;
+      const avgCoc = cocSum / processedListings.length;
+
+      document.getElementById('kpiAvgCapRate').innerText = `${avgCap.toFixed(2)}%`;
+      document.getElementById('kpiAvgCoCYield').innerText = `${avgCoc.toFixed(2)}%`;
+      document.getElementById('kpiTotalValue').innerText = `$${totalValue.toLocaleString()}`;
+      document.getElementById('kpiTotalInvested').innerText = `$${totalInvested.toLocaleString()}`;
+
+      renderYieldChart();
+      renderAppreciationChart();
+      renderTable();
+      lucide.createIcons();
+    }
+
+    function renderYieldChart() {
+      const ctx = document.getElementById('yieldChart').getContext('2d');
+      if (yieldChartInstance) yieldChartInstance.destroy();
+
+      const scatterData = processedListings.map(p => ({
+        x: p.cap_rate_percent,
+        y: p.coc_yield_percent,
+        label: p.property_name
+      }));
+
+      yieldChartInstance = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [{
+            label: 'Properties Evaluated',
+            data: scatterData,
+            backgroundColor: '#10b981',
+            borderColor: '#34d399',
+            borderWidth: 2,
+            pointRadius: 8,
+            pointHoverRadius: 10
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { title: { display: true, text: 'Cap Rate (%)', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#1c2254' } },
+            y: { title: { display: true, text: 'Cash-on-Cash Yield (%)', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#1c2254' } }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.raw.label}: Cap ${context.raw.x}%, CoC ${context.raw.y}%`;
+                }
+              }
+            },
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function renderAppreciationChart() {
+      const ctx = document.getElementById('appreciationChart').getContext('2d');
+      if (appreciationChartInstance) appreciationChartInstance.destroy();
+
+      const years = ['Purchase', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'];
+      const datasets = processedListings.slice(0, 3).map((p, idx) => {
+        const colors = ['#10b981', '#fbbf24', '#a855f7'];
+        return {
+          label: p.property_name,
+          data: p.mean_appreciation_path,
+          borderColor: colors[idx % colors.length],
+          backgroundColor: 'transparent',
+          borderWidth: 2.5,
+          tension: 0.3
+        };
+      });
+
+      appreciationChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels: years, datasets: datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: '#1c2254' } }
+          },
+          plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10 } } }
+        }
+      });
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('propertyTableBody');
+      tbody.innerHTML = '';
+
+      processedListings.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-900/60 transition-colors";
+
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-emerald-400">${p.property_id}</td>
+          <td class="p-3 text-slate-300 max-w-xs truncate">${p.property_name}</td>
+          <td class="p-3 text-right text-slate-300">$${p.purchase_price.toLocaleString()}</td>
+          <td class="p-3 text-right text-emerald-400 font-bold">${p.cap_rate_percent.toFixed(2)}%</td>
+          <td class="p-3 text-right text-emerald-400 font-bold">${p.coc_yield_percent.toFixed(2)}%</td>
+          <td class="p-3 text-right ${p.dscr >= 1.25 ? 'text-emerald-400' : 'text-rose-400'} font-bold">${p.dscr.toFixed(2)}</td>
+          <td class="p-3 text-right text-amber-400 font-bold">$${p.median_5y_value.toLocaleString()}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateAmortizationParameters() {
+      const ltv = document.getElementById('sliderLtv').value;
+      const rate = parseFloat(document.getElementById('sliderInterest').value);
+      const app = parseFloat(document.getElementById('sliderAppreciation').value);
+
+      document.getElementById('lblLtv').innerText = `${ltv}% LTV`;
+      document.getElementById('lblInterest').innerText = `${rate.toFixed(2)}%`;
+      document.getElementById('lblAppreciation').innerText = `${app.toFixed(2)}%`;
+
+      renderApp();
+    }
+
+    // 3. ANTIGRAVITY PROPTECH AI ADVISOR CHAT
+    function handleChatKey(e) {
+      if (e.key === 'Enter') submitAgentChat();
+    }
+
+    function submitAgentChat() {
+      const input = document.getElementById('agentChatInput');
+      const query = input.value.trim();
+      if (!query) return;
+
+      appendChatMessage(query, true);
+      input.value = '';
+
+      setTimeout(() => {
+        const reply = getAgentReply(query);
+        appendChatMessage(reply, false);
+      }, 400);
+    }
+
+    function appendChatMessage(msg, isUser) {
+      const screen = document.getElementById('agentChatScreen');
+      const div = document.createElement('div');
+      div.className = `p-2 rounded-lg border text-xs leading-relaxed ${isUser ? 'bg-slate-900 border-slate-800 text-white text-right self-end' : 'bg-emerald-950/20 border-emerald-900/40 text-slate-300'}`;
+      div.innerHTML = isUser ? `👤 ${msg}` : `🤖 **Antigravity:** ${msg}`;
+      screen.appendChild(div);
+      screen.scrollTop = screen.scrollHeight;
+    }
+
+    function getAgentReply(query) {
+      const q = query.toLowerCase();
+
+      if (q.includes('yield') || q.includes('cap') || q.includes('formula')) {
+        return "I evaluate yields using: **$\\text{Cap Rate} = \\frac{\\text{NOI}}{\\text{Price}}$** and **$\\text{Cash-on-Cash} = \\frac{\\text{Cash Flow after Debt}}{\\text{Equity}}$**. Adjust LTV to optimize cash leverage.";
+      }
+      if (q.includes('risk') || q.includes('dscr') || q.includes('debt')) {
+        return "Lenders seek a **DSCR > 1.25** to secure financing. If interest rates rise above 6%, several properties may slip below this boundary. Reduce LTV to improve debt coverage.";
+      }
+      if (q.includes('shock') || q.includes('market') || q.includes('crash')) {
+        // Trigger negative appreciation shock
+        document.getElementById('sliderAppreciation').value = -1.5;
+        updateAmortizationParameters();
+        return "⚠️ GDP/Appreciation shock triggered! Annual appreciation set to **-1.50%**. Property values depreciating over the 5-year exit horizon.";
+      }
+
+      return "I can explain the **yield formulas**, **calculate debt limits (DSCR)**, or simulate a **market appreciation shock**. What analysis would you like to run?";
+    }
+
+    function openModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
+    function closeModal() { document.getElementById('uploadModal').classList.add('hidden'); }
+
+    function handleFileSelect(e) {
+      if (e.target.files.length > 0) {
+        selectedFileObject = e.target.files[0];
+        document.getElementById('fileLabel').innerText = `Selected: ${selectedFileObject.name}`;
+      }
+    }
+
+    function processUploadedCsv() {
+      if (!selectedFileObject) { alert('Please select a Listings CSV file'); return; }
+      
+      const btn = document.getElementById('btnSubmitCsv');
+      btn.innerHTML = `<span class="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span><span>Modeling Yields...</span>`;
+      btn.disabled = true;
+
+      setTimeout(() => {
+        Papa.parse(selectedFileObject, {
+          header: true, dynamicTyping: true, skipEmptyLines: true,
+          complete: function(results) {
+            if (results.data && results.data.length > 0) {
+              try {
+                const parsed = [];
+                const rowsToIngest = results.data.slice(0, 500);
+
+                rowsToIngest.forEach((row, i) => {
+                  const norm = {};
+                  Object.keys(row).forEach(k => { if (k) norm[k.toLowerCase().trim().replace(/[^a-z0-9]/g, '_')] = row[k]; });
+                  function getRawVal(aliases) {
+                    for (let a of aliases) {
+                      const nk = a.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                      if (norm[nk] !== undefined && norm[nk] !== null && norm[nk] !== '') {
+                        return norm[nk];
+                      }
+                    }
+                    return undefined;
+                  }
+
+                  const price = parseFloat(getRawVal(['purchase_price', 'price', 'cost']) || 350000);
+                  const rent = parseFloat(getRawVal(['gross_monthly_rent', 'rent']) || 2500);
+                  const exp = parseFloat(getRawVal(['monthly_expenses', 'expenses']) || 500);
+
+                  parsed.push({
+                    property_id: String(getRawVal(['property_id', 'id']) || `PROP-${i+1}`),
+                    property_name: String(getRawVal(['property_name', 'name', 'title']) || `Listing ${i+1}`),
+                    purchase_price: price,
+                    gross_monthly_rent: rent,
+                    monthly_expenses: exp
+                  });
+                });
+
+                rawProperties = parsed;
+                closeModal();
+                
+                const notice = document.getElementById('statusNotice');
+                document.getElementById('statusNoticeText').innerText = `Successfully calculated yield metrics on ${parsed.length} properties!`;
+                notice.classList.remove('hidden');
+                setTimeout(() => notice.classList.add('hidden'), 5000);
+
+                renderApp();
+              } catch (err) {
+                alert(`Error parsing listings CSV: ${err.message}`);
+              } finally {
+                btn.innerHTML = `<span>Calculate Yield Models</span>`;
+                btn.disabled = false;
+              }
+            }
+          }
+        });
+      }, 50);
+    }
+
+    function downloadSampleCsv() {
+      const csvStr = "property_id,property_name,purchase_price,gross_monthly_rent,monthly_expenses\n" +
+                     "PROP-DXB-501,Downtown Dubai Luxury 1BR,550000,4200,800\n" +
+                     "PROP-RUH-502,Riyadh Olaya District 2BR,380000,2900,550\n" +
+                     "PROP-DXB-503,Dubai Marina Executive Suite,310000,2300,480\n";
+      const blob = new Blob([csvStr], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'sample_properties.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    function exportToCsv() {
+      let csv = "Property ID,Property Name,Purchase Price,Cap Rate %,Cash-on-Cash %,DSCR,Annual NOI,Annual Debt Service,5Y Median Value\n";
+      processedListings.forEach(p => {
+        csv += `"${p.property_id}","${p.property_name}",${p.purchase_price},${p.cap_rate_percent},${p.coc_yield_percent},${p.dscr},${p.annual_noi},${p.annual_debt_service},${p.median_5y_value}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'portfolio_yield_report.csv';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    function filterTable() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const rows = document.querySelectorAll('#propertyTableBody tr');
+      rows.forEach(r => {
+        const text = r.innerText.toLowerCase();
+        r.style.display = text.includes(query) ? '' : 'none';
+      });
+    }
+
+    window.onload = function() { renderApp(); };
+  </script>
+</body>
+</html>
